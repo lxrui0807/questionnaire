@@ -3,8 +3,6 @@
 ## 简介
 &emsp;基于 SpringBoot、jwt和JwtPermission实现的前后端分离开发框架，接口遵循RESTful风格，相比SpringSecurity和oAuth2.0框架更加轻量级。
 
-> 在线演示：[http://oauth.easyweb.vip/](http://oauth.easyweb.vip/)， 账号：admin，密码：admin。
-
 
 ## 使用技术
 
@@ -64,35 +62,6 @@
         |    |-system
         |
         |-application.properties                 // 配置文件
-```
-
-
-## 项目截图
-
-![用户管理](https://s2.ax1x.com/2019/07/06/Zw8kyn.png)
-
-![权限管理](https://s2.ax1x.com/2019/07/06/Zw8KW4.png)
-
-
-## 相关学习资料
-
-- [Spring Boot 从入门到进阶系列教程](http://www.spring4all.com/article/246)
-
-- [Spring Security 从入门到进阶系列教程](http://www.spring4all.com/article/428)
-- [理解OAuth 2.0 - 阮一峰](http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html)
-- [基于Token的WEB后台认证机制](https://www.cnblogs.com/xiekeli/p/5607107.html)
-- [RESTful API 设计指南](http://www.ruanyifeng.com/blog/2014/05/restful_api.html)
-- [使用Swagger2构建RESTful API](http://www.spring4all.com/article/251)
-- [Swagger2 - 注解详细说明](http://www.spring4all.com/article/251)
-- [IDEA SpringBoot 热部署+html修改自动刷新](https://my.oschina.net/yejunxi/blog/845752)
-
- :smirk: 学如逆水行舟，不进则退~~~
-
-
-### 联系方式
-**欢迎加入“前后端分离技术交流群”**
-
-![群二维码](https://s2.ax1x.com/2019/07/06/Zw83O1.jpg)
-
-### 推荐
-&emsp;**《EasyWeb管系统模板》**，一个开箱即用的后台模板，使用简单，模板丰富，包含ifram版和spa单页面版，[前往查看](https://easyweb.vip)。
+        
+        
+        属于测试项目

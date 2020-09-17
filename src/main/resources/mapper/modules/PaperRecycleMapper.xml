@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.modules.dao.PaperRecycleMapper">
+    <!--查询某份问卷的总回收量、浏览量-->
+    <select id="findRecycledSum" resultType="PaperRecycle">
+      SELECT
+        IFNULL(sum( recycled ),0) as recycled ,
+        IFNULL((SELECT views FROM bd_paper_views where paper_id = #{paperId}),0) as views
+      FROM
+        bd_paper_recycle
+      WHERE
+        paper_id = #{paperId} AND del_flag='0'
+    </select>
+    <!--查询每份问卷的平均完成时间-->
+    <select id="findAvgTime" resultType="double">
+        SELECT
+          avg( TIMESTAMPDIFF( MINUTE, start_time, end_time ) )
+        FROM
+          bd_paper_answer
+        WHERE
+          paper_id = #{paperId} and is_invalid='0'
+    </select>
+    <!--查询每一天的回收量统计图表数据-->
+    <select id="findRecycledListByDay" resultType="PaperRecycle">
+    SELECT
+        sum( recycled ) as recycled,
+        date_format( recycle_time, '%Y-%m-%d' )  as paperId
+    FROM
+        bd_paper_recycle
+    WHERE
+        paper_id = #{paperId}  AND del_flag='0'
+    GROUP BY
+        date_format( recycle_time, '%y-%m-%d' )
+    </select>
+
+    <update id="updateDelFlag">
+        UPDATE bd_paper_recycle
+        SET del_flag=#{delFlag}
+        WHERE paper_answer_id=#{paperAnswerId}
+    </update>
+
+</mapper>

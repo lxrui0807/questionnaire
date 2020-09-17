@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.modules.dao.PaperViewsMapper">
+    <!--查询某份问卷的浏览量-->
+    <select id="findViewsByPaper" resultType="java.lang.Long">
+      SELECT
+        views
+      FROM
+        bd_paper_views
+      WHERE
+        paper_id = #{paperId}
+    </select>
+    <insert id="insertView" >
+        INSERT INTO bd_paper_views(
+        paper_id,
+        views)
+        VALUES
+        (#{paperId}, #{views})
+    </insert>
+    <update id="updateView" >
+        UPDATE bd_paper_views
+        SET views=#{views}
+        WHERE paper_id=#{paperId}
+    </update>
+</mapper>

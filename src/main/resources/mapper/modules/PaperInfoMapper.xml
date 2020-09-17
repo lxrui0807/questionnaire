@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.modules.dao.PaperInfoMapper">
+
+    <!--查询某用户的所有(非废纸篓)问卷-->
+    <select id="findListByUserId" resultType="PaperInfo">
+          SELECT
+            p.id,
+            p.user_id,
+            p.title,
+            p.`status`,
+            p.create_time,
+            p.update_time,
+            p.subtitle,
+            p.del_flag,
+            p.delivery_url,
+            p.update_by,
+            p.qrcode_url,
+            p.remarks,
+            p.create_by,
+            p.template_classify,
+            p.paper_type
+          FROM bd_paper_info p
+          ${ew.customSqlSegment}
+
+    </select>
+
+    <!--查询某用户的所有(废纸篓)问卷-->
+    <select id="findListByUserIdAtRecycleBin" resultType="PaperInfo">
+          SELECT
+            p.id,
+            p.user_id,
+            p.title,
+            p.`status`,
+            p.create_time,
+            p.update_time,
+            p.subtitle,
+            p.del_flag,
+            p.delivery_url,
+            p.update_by,
+            p.qrcode_url,
+            p.remarks,
+            p.create_by,
+            p.template_classify,
+            p.paper_type
+          FROM bd_paper_info p
+          WHERE p.del_flag='1' and template_classify!='是'
+          <if test="userId!=null and userId!='' ">
+          AND p.user_id=#{userId}
+          </if>
+    </select>
+
+    <!--开始回收/暂停回收-->
+    <update id="updateRecycleStatus">
+        UPDATE bd_paper_info
+        SET `status`=#{status}
+        WHERE id = #{id}
+    </update>
+
+    <!--移动到废纸篓-->
+    <update id="move">
+        UPDATE bd_paper_info
+        SET del_flag='1'
+        WHERE id=#{id}
+    </update>
+
+    <!--恢复-->
+    <update id="recovery">
+        UPDATE bd_paper_info
+        SET del_flag='0'
+        WHERE id=#{id}
+    </update>
+
+    <!--彻底删除-->
+    <delete id="delete">
+        DELETE FROM bd_paper_info
+        WHERE id=#{id}
+    </delete>
+    <!--查询每个试卷对应的问题数量，作为首页的推荐列表-->
+    <select id="findTemplateClassify" resultType="PaperInfo">
+        SELECT
+            count( 1 ) AS remarks,
+            p.id,
+            p.title,
+            p.create_time
+        FROM
+            bd_paper_info p
+        left join
+            bd_paper_question pq  on p.id = pq.paper_id
+        WHERE
+             p.template_classify = '是'
+        <if test="title!=null and title!='' ">
+            AND p.title LIKE CONCAT('%',#{title},'%')
+        </if>
+            group by p.id
+        ORDER BY
+            p.create_time DESC
+    </select>
+
+</mapper>

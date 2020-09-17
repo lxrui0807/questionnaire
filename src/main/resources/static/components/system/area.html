@@ -1,0 +1,228 @@
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <button id="areaBtnAdd" class="layui-btn icon-btn"><i class="layui-icon">&#xe654;</i>添加</button>
+                        <button id="btnExpandAuth" class="layui-btn icon-btn">全部展开</button>
+                    </div>
+                    <div class="layui-inline">
+                        <button id="btnFoldAuth" class="layui-btn icon-btn">全部折叠</button>
+                    </div>
+                </div>
+            </div>
+
+            <table class="layui-table" id="areaTable" lay-filter="areaTable"></table>
+
+        </div>
+    </div>
+</div>
+<style>
+    body .to-fix-select .layui-layer-content {overflow: visible;}
+</style>
+<!-- 表格操作列 -->
+<script type="text/html" id="areaTableBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="areaForm">
+    <form lay-filter="areaForm" class="layui-form model-form" style="max-width: 600px;margin: 40px auto;">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label">上级区域:</label>
+            <div class="layui-input-block">
+                <input id="pidCascader" name="parentIds" placeholder="请选择" class="layui-hide"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">区域名称:</label>
+            <div class="layui-input-block">
+                <input name="name" placeholder="请输入区域名称" type="text" class="layui-input"
+                       maxlength="20" lay-verify="required" required/>
+                       <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">区域类型:</label>
+            <div class="layui-input-block">
+                <select id="typeSel" name="type" lay-search></select>
+                <!--<select id="typeSel" name="type">
+                    <option value="1">国家</option>
+                    <option value="2">省份、直辖市</option>
+                    <option value="3">地市</option>
+                    <option value="4">区县</option>
+                </select>-->
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">备注:</label>
+            <div class="layui-input-block">
+                <input name="remarks" placeholder="请输入备注" type="text" class="layui-input"
+                       maxlength="80"/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+            <button class="layui-btn" lay-filter="areaFormSubmit" lay-submit>保存</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<script>
+    layui.use(['layer', 'admin', 'config','treeTable','cascader','form'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var admin = layui.admin;
+        var config = layui.config;
+        var treeTable = layui.treeTable;
+        var cascader=layui.cascader;
+        var form=layui.form;
+        var TYPES=['','国家','省份、直辖市','地市','区县'];
+        var areaType=[];//区域类型
+
+        //渲染表格
+        var areaIns = treeTable.render({
+            elem: '#areaTable',
+            tree: {
+                iconIndex: 1,
+                arrowType: 'arrow2'
+            },
+            text: {},
+            cols: [
+                {type: 'numbers',title: '序号',width:80},
+                {field: 'name', title: '区域名称'},
+                {
+                    templet: function (d) {
+                        return TYPES[d.type]||'未知';
+                    }, title: '区域类型'
+                },
+                {field: 'remarks', title: '备注'},
+                {align: 'center', toolbar: '#areaTableBar', title: '操作', minWidth: 120}
+            ],
+            reqData: function (data, callback) {
+                var jsondata={
+                    "pid":data ? data.id : null,
+                    "access_token":config.getToken()
+                }
+                $.post(config.base_server + 'area/subTree',jsondata, function (res) {
+                    callback(res.data);
+                });
+            },
+            style: 'margin-top:0;'
+        });
+
+        // 添加按钮点击事件(因级联显示只能放在页面上，才显示并有足够的宽度，后续可优化)
+        $('#areaBtnAdd').click(function () {
+             editform();
+         });
+
+        // 工具条点击事件
+        treeTable.on('tool(areaTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') { //修改
+                editform(data);
+            } else if (obj.event === 'del') { // 删除
+                doDelete(obj);
+            }
+        });
+
+         // 全部展开按钮点击事件
+         $('#btnExpandAuth').click(function () {
+             areaIns.expandAll();
+         });
+
+        // 全部折叠按钮点击事件
+         $('#btnFoldAuth').click(function () {
+             areaIns.foldAll();
+         });
+
+        function editform(area) {
+            var editIns = admin.open({
+                type: 1,
+                title: (area ? '修改' : '添加') + '区域',
+                offset: '65px',
+                content: $('#areaForm').html(),
+                area: '660px',
+                skin: 'to-fix-select',
+                success: function (layero, index) {
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');  // 禁止出现滚动条
+
+                    $('select[name="type"]').html('<option value="">请选择</option>');
+                    for (var i = 0; i < areaType.length; i++) {
+                        $('select[name="type"]').append('<option value="' + areaType[i].value + '">' + areaType[i].label + '</option>');
+                    }
+
+                    // 动态加载
+                    form.val('areaForm', area);
+
+                    //地区级联
+                    cascader.render({
+                        elem: '#pidCascader',
+                        itemHeight: '550px',
+                        changeOnSelect: true,
+                        reqData: function (values, callback, data) {
+                            var jsondata = {
+                                "pid": data ? data.value : null,
+                                "access_token": config.getToken()
+                            }
+                            $.post(config.base_server + 'area/subSel', jsondata, function (res) {
+                                callback(res.data);
+                            });
+
+                        }
+                    });
+
+                    // 表单提交事件
+                    form.on('submit(areaFormSubmit)', function (data) {
+                        layer.load(2);
+                        admin.req('area', data.field, function (res) {
+                            layer.closeAll('loading');
+                            if (res.code == 200) {
+                                layer.msg(res.msg, {icon: 1});
+                                layer.close(editIns);
+                                areaIns.reload();
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, area ? 'PUT' : 'POST');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        // 删除
+        function doDelete(obj) {
+             layer.confirm('确定要删除吗？', {
+                 offset: '65px',
+                 skin: 'layui-layer-admin'
+             }, function (i) {
+                 layer.close(i);
+                 layer.load(2);
+                 admin.req('area/' + obj.data.id, {}, function (res) {
+                     layer.closeAll('loading');
+                     if (res.code == 200) {
+                         layer.msg(res.msg, {icon: 1});
+                         obj.del();
+                     } else {
+                         layer.msg(res.msg, {icon: 2});
+                     }
+                 }, 'DELETE');
+             });
+         }
+    // 获取全部类型
+    layer.load(2);
+    admin.req('dict/list/sys_area_type', {}, function (res) {
+        layer.closeAll('loading');
+        if (res.code == 200) {
+            areaType = res.dictList;
+        } else {
+            layer.msg(res.msg, {icon: 2});
+        }
+    }, 'get');
+
+    });
+</script>

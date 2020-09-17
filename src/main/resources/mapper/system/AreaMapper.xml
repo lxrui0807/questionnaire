@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.system.dao.AreaMapper">
+
+    <select id="findByParentId" resultType="com.wf.ew.system.model.Area">
+		select
+			A.id,
+			A.parent_id AS "parentId",
+			A.name,
+			A.type,
+			A.remarks,
+			A.PARENT_IDS,
+			0 as state,
+			(select count(1)>0 from SYS_AREA where parent_ID=A.id and DEL_FLAG='0')  as haveChild
+		from SYS_AREA A
+		where A.DEL_FLAG='0'
+		<choose>
+			<when test="pid!=null and pid!='' ">
+				and A.PARENT_ID=#{pid}
+			</when>
+			<otherwise>
+				and (isnull(A.PARENT_ID) or trim(A.PARENT_ID)='')
+			</otherwise>
+		</choose>
+	    order by A.sort,A.id
+	</select>
+
+	<!--根据id查询REMARKS-->
+	<select id="getRemarksById" resultType="String">
+		SELECT REMARKS from sys_area
+		where DEL_FLAG='0'
+		AND ID=#{id}
+	</select>
+
+	<!--根据remarks查询id-->
+	<select id="getIdByRemarks" resultType="String">
+		SELECT ID from sys_area
+		WHERE DEL_FLAG='0'
+		AND REMARKS=#{remarks}
+	</select>
+</mapper>

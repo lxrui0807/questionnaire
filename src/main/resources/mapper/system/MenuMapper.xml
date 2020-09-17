@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.system.dao.MenuMapper">
+    <select id="findByParentId" resultType="com.wf.ew.system.model.Menu">
+        select
+        A.id,
+        A.parent_id AS "parentId",
+        A.name,
+        A.menu_url,
+        A.menu_icon,
+        A.authority,
+        A.sort,
+        A.create_time,
+        A.update_time,
+        A.PARENT_IDS,
+        0 as state,
+        (select count(1)>0 from sys_menu where parent_ID=A.id and DEL_FLAG='0') as haveChild
+        from sys_menu A
+        where A.DEL_FLAG='0'
+        <choose>
+            <when test="pid!=null and pid!='' ">
+                and A.PARENT_ID=#{pid}
+            </when>
+            <otherwise>
+                and (isnull(A.PARENT_ID) or trim(A.PARENT_ID)='')
+            </otherwise>
+        </choose>
+        order by A.sort,A.id
+    </select>
+</mapper>

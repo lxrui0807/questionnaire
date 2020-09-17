@@ -1,0 +1,87 @@
+body {
+	background-image:url("../images/regis.jpg");
+    /*background-image: url("../../assets/images/bg_login.svg");*/
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-color: #f0f2f5;
+}
+.regis-content{
+	width: 50%;
+	float: right;
+	padding-top: 10%
+}
+.login-main {
+    width: 45%;
+    margin: 0 auto;
+}
+ @media screen and (max-width:768px){
+ 	body {
+		background-image:none;
+	    /*background-image: url("../../assets/images/bg_login.svg");*/
+	    background-repeat: no-repeat;
+	    background-size: 100% 100%;
+	    background-color: #f0f2f5;
+	}
+ 	.regis-content{
+		width: 100%;
+	}
+ }
+.login-main header {
+    margin-bottom: 40px;
+    height: 35px;
+    line-height: 35px;
+    font-size: 30px;
+    font-weight: 100;
+    text-align: center;
+}
+
+.layui-form-item .layui-form-label{
+    padding: 9px 0px;
+    text-align: left;
+    width: 60px;
+}
+
+.layui-form-item .layui-input-block input{
+    margin-left: -15px;
+    display: inline-block;
+}
+
+.login-main form .layui-input-inline button {
+    width: 100%;
+}
+
+.login-main form .login-btn {
+    margin-bottom: 5px;
+}
+
+.fl {
+    float: left;
+    color: rgba(0,0,0,0.4);
+}
+
+.fr {
+    float: right;
+    color: rgba(0,0,0,0.4);
+}
+.layui-form-item .layui-input-inline{
+	margin-left: 15px;
+}
+.login-footer{
+	width: 25%;
+    position: absolute;
+    bottom: 15px;
+    text-align: center;
+}
+.login-footer a {
+    color: rgba(0, 0, 0, 0.4) !important;
+}
+.layui-form-item .layui-inline{
+	margin-right: 0px;
+}
+.layui-input, .layui-textarea{
+	width: 90%;
+}
+.reg-tips{
+	padding-top:13px ;
+	color: #009688;
+}

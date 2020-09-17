@@ -1,0 +1,701 @@
+<style>
+    .layui-badge-rim + .layui-badge-rim {
+        margin-left: 5px;
+    }
+
+    /** 项目列表样式 */
+    .layui-col-space30 {
+        margin: 0px;
+    }
+
+    .project-list-item {
+        background-color: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all .2s;
+        height: 365px;
+    }
+
+    .project-list-item:hover {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+    }
+
+    .project-list-item .project-list-item-cover {
+        max-width: 100%;
+        margin: auto;
+        height: 220px;
+        display: block;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    .project-list-item-body {
+        padding: 20px;
+        background-size: 160px;
+        background-repeat: no-repeat;
+        background-position-y: top;
+        background-position-x: right;
+    }
+
+    .project-list-item .project-list-item-body > h2 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 12px;
+    }
+
+    .project-list-item .project-list-item-text {
+        height: 44px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .project-list-item .project-list-item-desc {
+        position: relative;
+    }
+
+    .project-list-item .project-list-item-desc .time {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .project-list-item .project-list-item-desc .ew-head-list {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .ew-head-list .ew-head-list-item {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 1px solid #fff;
+        margin-left: -10px;
+    }
+
+    .ew-head-list .ew-head-list-item:first-child {
+        margin-left: 0;
+    }
+
+    /** // 项目列表样式结束 */
+    /* 文件列表item */
+    .file-choose-list-item {
+        position: relative;
+        display: inline-block;
+        vertical-align: top;
+        padding: 8px 8px;
+        margin: 5px 0;
+        cursor: pointer;
+    }
+
+    .file-choose-list-item:hover {
+        background-color: #F7F7F7;
+    }
+
+    /* 文件列表图片 */
+    .file-choose-list-item-img {
+        width: 120px;
+        height: 90px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        border-radius: 3px;
+        overflow: hidden;
+        position: relative;
+        background-color: #eee;
+    }
+
+    .file-choose-list-item-img.img-icon {
+        background-size: inherit;
+        background-color: transparent;
+    }
+
+    .file-choose-list-item.active .file-choose-list-item-img:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* 文件列表名称 */
+    .file-choose-list-item-name {
+        width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #333;
+        font-size: 12px;
+        text-align: center;
+        margin-top: 12px;
+    }
+
+    /* 文件列表复选框 */
+    .file-choose-list-item-ck {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+    }
+
+    .file-choose-list-item-ck .layui-form-checkbox {
+        padding: 0;
+    }
+
+    /* 文件列表操作菜单 */
+    .file-choose-oper-menu {
+        background-color: #fff;
+        position: absolute;
+        left: 128px;
+        top: 8px;
+        border-radius: 2px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, .15);
+        transition: all .3s;
+        overflow: hidden;
+        transform-origin: left top;
+    }
+
+    .file-choose-oper-menu.show {
+        transform: scale(1);
+        visibility: visible;
+    }
+
+    /* 文件列表操作菜单item */
+    .file-choose-oper-menu-item {
+        color: #555;
+        padding: 6px 5px;
+        font-size: 14px;
+        min-width: 70px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .file-choose-oper-menu-item:hover {
+        background-color: #eee;
+    }
+
+    /** 文件列表为空时样式 */
+    .file-choose-empty {
+        text-align: center;
+        color: #999;
+        padding: 50px 0;
+    }
+
+    .file-choose-empty .layui-icon {
+        font-size: 60px;
+        margin-bottom: 8px;
+    }
+
+    .hide {
+        display: none;
+    }
+</style>
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form toolbar">
+                <div class="layui-inline">
+                    <select name="status" id="status">
+                        <option value="">请选择状态</option>
+                        <option value="待审核">待审核</option>
+                        <option value="审核通过">审核通过</option>
+                        <option value="审核未通过">审核未通过</option>
+                    </select>
+                </div>
+                <div class="layui-inline">
+                    <input id="title" class="layui-input" type="text" placeholder="输入标题"/>
+                </div>
+                <div class="layui-inline">
+                    <button id="newsBtnSearch" class="layui-btn icon-btn"><i class="layui-icon">&#xe615;</i>搜索</button>
+                    <button id="newsBtnAdd" class="layui-btn icon-btn"><i class="layui-icon">&#xe654;</i>添加</button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space30" id="demoGrid2" style="position: relative;">
+        </div>
+    </div>
+</div>
+
+<!--渲染列表-->
+<script type="text/html" id="demoGridItem2">
+    <div class="layui-col-md3">
+        <div class="project-list-item">
+            <img class="project-list-item-cover" src="{{photoUrl+d.photo}}"/>
+            <div class="project-list-item-body" style="background-image: url(../../assets/images/{{d.status!='审核通过'?(d.status!='审核未通过'?'nostatus.png':'nopass.png'):'pass.png'}})">
+                <h2>{{d.title}}</h2>
+                <div class="project-list-item-text layui-text">{{d.copyFrom}}</div>
+                <div class="project-list-item-desc">
+                    <span class="time" renderer="timeRenderer">{{d.createTime}}</span>
+                    <div class="ew-head-list">
+                        <a class="layui-btn layui-icon layui-btn-xs {{d.status=='待审核'?'':'layui-btn-disabled'}}  {{d.permission==true?'':'layui-hide'}} {{d.permission}} audit" lay-event="audit" id="{{d.id}}">审核</a>
+                        <a class="layui-btn layui-btn-primary layui-btn-xs {{d.status!='审核通过'?'':'layui-btn-disabled'}} edit " id="{{d.id}}"
+                           lay-event="edit">修改</a>
+                        <a class="layui-btn layui-btn-danger layui-btn-xs del" lay-event="del" id="{{d.id}}">删除</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="newsForm">
+    <form lay-filter="newsForm" class="layui-form model-form">
+        <input type="hidden" name="type" id="type"/>
+        <input id="id" name="id" type="hidden" value=""/>
+        <div class="layui-form-item">
+            <label class="layui-form-label">标题</label>
+            <div class="layui-input-block">
+                <input name="title" placeholder="请输入标题" type="text" class="layui-input" maxlength="200"
+                       lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">图片</label>
+            <div class="layui-input-block">
+                <div id="file-list-group"></div>
+                <input name="photo" type="hidden" lay-verify="required" required>
+                <button id="file-btn-upload" class="layui-btn layui-btn-sm layui-btn-normal icon-btn" type="button">
+                    <i class="layui-icon">&#xe681;</i>上传文件
+                </button>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">内容</label>
+            <div class="layui-input-block">
+                <textarea name="content" placeholder="请输入内容" lay-verify="content" class="layui-textarea"
+                          id="layeditDemo" maxlength="200"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">新闻来源</label>
+            <div class="layui-input-block">
+                <input name="copyFrom" placeholder="请输入新闻来源" type="text" class="layui-input" maxlength="200"
+                       lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea name="remarks" placeholder="请输入备注" class="layui-textarea" maxlength="200"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-hide text-right" id="audit">
+            <button class="layui-btn" lay-filter="newsSuccess" lay-submit>审核通过</button>
+            <button class="layui-btn layui-btn-primary" lay-filter="newsFalse" lay-submit>审核失败</button>
+        </div>
+        <div class="layui-hide text-right" id="update">
+            <button class="layui-btn" lay-filter="newsFormSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<script>
+    layui.use(['layer', 'form', 'dataGrid', 'admin', 'config', 'richText', 'element', 'layedit', 'upload', 'util', 'fileChoose'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var dataGrid = layui.dataGrid;
+        var admin = layui.admin;
+        var config = layui.config;
+        var richText = layui.richText;
+        var layedit = layui.layedit;
+        var element = layui.element;
+        var router = layui.router();
+        var upload = layui.upload;
+        var util = layui.util;
+        var fileChoose = layui.fileChoose;
+
+        dataGrid.render({
+            elem: '#demoGrid2',  // 容器
+            templet: '#demoGridItem2',  // 模板
+            where: {
+                access_token: config.getToken(),
+                type: router.search.type//获取请求路径的参数值
+                //type:"mainnewsPhoto"
+            },
+            data: config.base_server + 'news/newPhoto',
+            //data: res,  // url
+            page: {limit: 8, limits: [8, 16, 24, 32, 40]},  // 开启分页
+            onItemClick: function (obj) {  // item事件
+                var index = obj.index + 1;
+                var objId = obj.data.id;
+                //layer.msg('点击了第' + index + '个', {icon: 1});
+                //layer.msg('这个列表的id为' + objId, {icon: 1});
+            }
+        });
+
+        // 审核
+        $('#demoGrid2').on('click','.ew-head-list .layui-btn.audit', function (obj) {
+            var objId = this.id;
+            admin.req('news/' +objId, {}, function (res) {
+                layer.closeAll('loading');
+                if (res.code == 200) {
+                    showAuditModel(res.newsBase);
+                    $('#audit').removeClass('layui-hide');
+                } else {
+                    layer.msg("审核失败，请重新操作", {icon: 2});
+                }
+            }, 'GET');
+
+        });
+
+        // 修改
+        $('#demoGrid2').on('click','.ew-head-list .layui-btn.edit', function (obj) {
+            var objId = this.id;
+            admin.req('news/' +objId, {}, function (res) {
+                layer.closeAll('loading');
+                if (res.code == 200) {
+                    showEditModel(res.newsBase);
+                    $('#update').removeClass('layui-hide');
+                } else {
+                    layer.msg("修改失败，请重新操作", {icon: 2});
+                }
+            }, 'GET');
+
+        });
+
+        // 删除
+        $('#demoGrid2').on('click','.ew-head-list .layui-btn.del', function (obj) {
+            var objId = this.id;
+            doDelete(objId);
+        });
+
+        // 删除
+        function doDelete(id) {
+            layer.confirm('确定要删除吗？', {
+                offset: '65px',
+                skin: 'layui-layer-admin'
+            }, function (i) {
+                layer.close(i);
+                layer.load(2);
+                admin.req('news/' +id, {}, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code == 200) {
+                        layer.msg(res.msg, {icon: 1});
+                        $('#newsBtnSearch').click();
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'DELETE');
+            });
+        }
+        // 搜索按钮点击事件
+        $('#newsBtnSearch').click(function () {
+            var title = $('#title').val();
+            var status = $('#status').val();
+            dataGrid.render({
+                elem: '#demoGrid2',  // 容器
+                templet: '#demoGridItem2',  // 模板
+                where: {
+                    access_token: config.getToken(),
+                    type: router.search.type, //获取请求路径的参数值
+                    status: $('#status').val(),
+                    title: $('#title').val()
+                },
+                data: config.base_server + 'news/newPhoto',
+                //data: res,  // url
+                page: {limit: 8, limits: [8, 16, 24, 32, 40]},  // 开启分页
+                onItemClick: function (obj) {  // item事件
+                    var index = obj.index + 1;
+                    var objId = obj.data.id;
+                    //layer.msg('点击了第' + index + '个', {icon: 1});
+                    //layer.msg('这个列表的id为' + objId, {icon: 1});
+                }
+            });
+        });
+
+        // 添加按钮点击事件
+        $('#newsBtnAdd').click(function () {
+            showAddModel();
+            $('#update').removeClass('layui-hide');
+        });
+
+        //显示审核弹框
+        function showAuditModel(data) {
+            admin.open({
+                type: 1,
+                area: '600px',
+                offset: '65px',
+                title: '审核新闻',
+                content: $('#newsForm').html(),
+                success: function () {
+                    //将输入框设置为只读
+                    $('input').prop('readonly', true);
+                    $('textarea').prop('readonly', true);
+                    form.val('newsForm', data);
+                    richText.render();//引用富文本
+                    //创建一个编辑器
+                    var ieditors = layedit.build('layeditDemo');
+                    $("iframe[textarea='layeditDemo']").contents().find('body').attr("contenteditable", false);//编辑器内容框不可编辑
+                    console.log(ieditors);
+                    //提交时把值同步到文本域中
+                    form.verify({
+                        content: function (value) {
+                            return layedit.sync(ieditors);
+                        }
+                    });
+                    if(data.photo!=null && data.photo.length>0){
+                        renderList(photoUrl + data.photo);
+                        $('#file-btn-upload').addClass('hide');
+                    }
+                    $('#file-btn-upload').addClass('hide');
+                    $('.file-choose-oper-menu').addClass('hide');
+
+                    // 表单提交事件
+                    form.on('submit(newsSuccess)', function (d) {
+                        layer.load(2);
+                        admin.req('news/audit', {id: data.id, status: '0'}, function (res) {
+                            layer.closeAll('loading');
+                            if (res.code == 200) {
+                                layer.msg(res.msg, {icon: 1});
+                                table.reload('newsTable');
+                                layer.closeAll('page');
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, data ? 'PUT' : 'POST');
+                    });
+                    form.on('submit(newsFalse)', function (d) {
+                        layer.load(2);
+                        admin.req('news/audit', {id: data.id, status: '1'}, function (res) {
+                            layer.closeAll('loading');
+                            if (res.code == 200) {
+                                layer.msg(res.msg, {icon: 1});
+                                table.reload('newsTable');
+                                layer.closeAll('page');
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, data ? 'PUT' : 'POST');
+                    });
+                },
+            });
+        }
+        // 显示添加或修改弹窗
+        function showEditModel(data) {
+            admin.open({
+                type: 1,
+                area: '600px',
+                offset: '65px',
+                title: '修改新闻',
+                content: $('#newsForm').html(),
+                success: function () {
+                    form.val('newsForm', data);
+                    richText.render();//引用富文本
+                    //创建一个编辑器
+                    var ieditors = layedit.build('layeditDemo');
+                    console.log(ieditors);
+                    //提交时把值同步到文本域中
+                    form.verify({
+                        //content富文本域中的lay-verify值
+                        content: function (value) {
+                            return layedit.sync(ieditors);
+                        }
+                    });
+                    if(data.photo!=null && data.photo.length>0){
+                        renderList(photoUrl + data.photo);
+                        $('#file-btn-upload').addClass('hide');
+                    }
+                    // 上传
+                    $('#file-btn-upload').click(function () {
+                    	layer.open({
+							type: 2,
+							title:'文件管理',
+							area: ['700px', '450px'],
+							fixed: false, //不固定
+							maxmin: true,
+							btn:['确定','取消'],
+							content: 'index.html?#/system/file',
+							yes:function(layero,index){
+								var arr = $(index).find('iframe')[0].contentWindow.callbackdata();
+								renderList(arr.username)
+								$('#file-btn-upload').addClass('hide');
+								$('[name="photo"]').val(arr.username)
+								layer.close(layero)
+							},
+							cancel:function(layero){
+								layer.close(layero)
+							}
+						});
+			        });
+//                  upload.render({
+//                      elem: '#file-btn-upload',
+//                      accept: 'images',
+//                      url: '/v1/file/uploadFile',
+//                      auto: !0,
+//                      bindAction: "",
+//                      field: "file",
+//                      acceptMime: "",
+//                      method: "post",
+//                      data: {access_token: config.getToken()},
+//                      drag: !0,
+//                      size: 10240,
+//                      number: 0,
+//                      multiple: !0,
+//
+//                      done: function (res, index, upload) {
+//                          //假设code=0代表上传成功
+//                          if (res.code == 0) {
+//                              //do something （比如将res返回的图片链接保存到表单的隐藏域）
+//                              var pth = res.data.src;
+//                              renderList(photoUrl + pth);
+//                              $('#file-btn-upload').addClass('hide');
+//                              $('[name="photo"]').val(pth);
+//                          }
+//                          //获取当前触发上传的元素，一般用于 elem 绑定 class 的情况，注意：此乃 layui 2.1.0 新增
+//                          var item = this.item;
+//
+//                          //文件保存失败
+//                          //do something
+//                      }
+//                  });
+                    // 表单提交事件
+                    form.on('submit(newsFormSubmit)', function (data) {
+                        layer.load(2);
+                        admin.req('news', data.field, function (res) {
+                            layer.closeAll('loading');
+                            if (res.code == 200) {
+                                layer.msg(res.msg, {icon: 1});
+                                layer.closeAll('page');
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'PUT');
+                    });
+                }
+            });
+        }
+
+        function renderList(dir) {
+            var name = dir.substr(dir.lastIndexOf('/') + 1);
+            var htmlStr = fileChoose.renderList({
+                data: [{
+                    "smUrl": dir,
+                    "hasSm": true,
+                    "name": name,
+                    "type": "file",
+                    "url": dir,
+                    "isDir": false
+                }],
+                menu: [{
+                    name: '<span style="color: red;">删除</span>',
+                    event: 'del'
+                }]
+            });
+            $('#file-list-group').html(htmlStr);
+        }
+        function showAddModel(data) {
+            admin.open({
+                type: 1,
+                area: '600px',
+                offset: '65px',
+                title: '添加新闻',
+                content: $('#newsForm').html(),
+                success: function () {
+                    form.val('newsForm', data);
+                    richText.render();//引用富文本
+                    //创建一个编辑器
+                    var ieditors = layedit.build('layeditDemo');
+                    console.log(ieditors);
+                    //提交时把值同步到文本域中
+                    form.verify({
+                        //content富文本域中的lay-verify值
+                        content: function (value) {
+                            return layedit.sync(ieditors);
+                        }
+                    });
+                    // 上传
+                    $('#file-btn-upload').click(function () {
+                    	layer.open({
+							type: 2,
+							title:'文件管理',
+							area: ['700px', '450px'],
+							fixed: false, //不固定
+							maxmin: true,
+							btn:['确定','取消'],
+							content: 'index.html?#/system/file',
+							yes:function(layero,index){
+								var arr = $(index).find('iframe')[0].contentWindow.callbackdata();
+								renderList(arr.username)
+								$('#file-btn-upload').addClass('hide');
+								$('[name="photo"]').val(arr.username)
+								layer.close(layero)
+							},
+							cancel:function(layero){
+								layer.close(layero)
+							}
+						});
+			        });
+//                  upload.render({
+//                      elem: '#file-btn-upload',
+//                      accept: 'images',
+//                      url: '/v1/file/uploadFile',
+//                      auto: !0,
+//                      bindAction: "",
+//                      field: "file",
+//                      acceptMime: "",
+//                      method: "post",
+//                      data: {access_token: config.getToken()},
+//                      drag: !0,
+//                      size: 10240,
+//                      number: 0,
+//                      multiple: !0,
+//
+//                      done: function (res, index, upload) {
+//                          //假设code=0代表上传成功
+//                          if (res.code == 0) {
+//                              //do something （比如将res返回的图片链接保存到表单的隐藏域）
+//                              var pth = res.data.src;
+//                              renderList(photoUrl + pth);
+//                              $('#file-btn-upload').addClass('hide');
+//                              $('[name="photo"]').val(pth);
+//                          }
+//                          //获取当前触发上传的元素，一般用于 elem 绑定 class 的情况，注意：此乃 layui 2.1.0 新增
+//                          var item = this.item;
+//
+//                          //文件保存失败
+//                          //do something
+//                      }
+//                  });
+
+
+
+                    // 表单提交事件
+                    form.on('submit(newsFormSubmit)', function (data) {
+                        layer.load(2);
+                        data.field.type = router.search.type;
+                        admin.req('news', data.field, function (res) {
+                            layer.closeAll('loading');
+                            if (res.code == 200) {
+                                layer.msg(res.msg, {icon: 1});
+                                table.reload('newsTable');
+                                layer.closeAll('page');
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'POST');
+                    });
+                }
+            });
+        }
+
+        // 菜单事件监听
+        $(document).off('click.fclomip').on('click.fclomip', '#file-list-group .file-choose-oper-menu-item', function () {
+            var event = $(this).data('event');
+            var name = $(this).parent().parent().find('.file-choose-list-item-name').text();
+            //页面删除
+            $(this).parent().parent().parent().empty();
+            admin.req('file/deletefile', {"fileName": name}, function (res) {
+            }, 'POST');
+            $('#file-btn-upload').removeClass('hide');
+            $('[name="photo"]').val('');
+        });
+    });
+</script>

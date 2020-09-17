@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.modules.dao.AnswerDetailMapper">
+    <!--根据问题id查询统计答案的数量-->
+    <select id="getAnswerCount" resultType="AnswerDetail">
+        SELECT
+        count( 1 ) as answerCount,
+        ad.question_answer
+        FROM
+        bd_answer_detail ad,
+        bd_paper_answer pa
+        WHERE
+        ad.question_id = #{questionId}
+        AND ad.paper_answer_id = pa.id AND pa.is_invalid='0'
+    <!--AND ad.update_by = pa.update_by-->
+     <if test="source!=null and source!='' ">
+     AND pa.source LIKE CONCAT('%',#{source},'%')
+     </if>
+     <if test="startDate!=null and endDate!=null  ">
+     AND date_format( pa.end_time, '%Y-%m-%d' ) BETWEEN #{startDate}
+     AND  #{endDate}
+     </if>
+    <if test="ipUrl!=null and ipUrl!='' ">
+        AND pa.ip_url LIKE CONCAT('%',#{ipUrl},'%')
+    </if>
+     <if test="areaId!=null and areaId!='' ">
+     AND pa.area_id = #{areaId}
+     </if>
+     <if test="value!=null and value!='' ">
+         <choose>
+             <when test="op=='小于' ">
+                 AND TIMESTAMPDIFF( MINUTE, start_time, end_time ) &lt; #{value}
+             </when>
+             <otherwise>
+                 AND TIMESTAMPDIFF( MINUTE, start_time, end_time ) &gt; #{value}
+             </otherwise>
+         </choose>
+     </if>
+     GROUP BY
+     ad.question_answer
+ </select>
+ <!--查询这份试卷每个人的每个问题的答案列表-->
+    <select id="getAnswersByUpdateBy" resultType="AnswerDetail">
+        SELECT
+            GROUP_CONCAT(question_answer)AS questionAnswer,
+            update_by
+        FROM
+            bd_answer_detail
+        WHERE
+            paper_answer_id IN ( SELECT id FROM bd_paper_answer WHERE paper_id = #{paperId} )
+            GROUP BY update_by
+        ORDER BY
+            update_by ASC,
+            question_id ASC,
+            update_time ASC
+    </select>
+    <!--查询当前时间以前的或者createTime至当前时间之间的文本题答案-->
+    <select id="findTextAreaOfAnswer" resultType="AnswerDetail">
+        SELECT
+        ad.question_answer,
+        ad.paper_answer_id
+        FROM
+        bd_answer_detail ad,
+        bd_question_info q,
+        bd_paper_answer pa
+        WHERE
+        ad.question_id = q.id
+        AND pa.id = ad.paper_answer_id
+        AND q.type = 'textarea'
+        AND ad.question_answer IS NOT NULL
+        AND ad.question_answer != ''
+        and pa.is_invalid='0'
+        <if test="createTime !=null and createTime!= ''">
+            AND pa.create_time &gt;#{createTime}
+        </if>
+        AND pa.create_time &lt;= SYSDATE( )
+    </select>
+</mapper>

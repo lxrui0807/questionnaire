@@ -1,0 +1,232 @@
+﻿<style>
+    #roleAuthTable + .layui-table-view .layui-table tbody tr:hover {
+        background-color: transparent;
+    }
+</style>
+
+<!--搜索-->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <!--按类型进行查询-->
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">类型：</label>
+                        <div class="layui-input-inline mr0">
+                            <input name="type" id="type" class="layui-input" type="text" placeholder="请输入类型"/>
+                        </div>
+                    </div>
+                    <!--按描述进行查询-->
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">描述：</label>
+                        <div class="layui-input-inline mr0">
+                            <input name="description" id="description" class="layui-input" type="text" placeholder="请输入描述"/>
+                        </div>
+                    </div>
+                    <!--字典类型标识查询-->
+                    <div class="layui-inline">
+                        <select id="sys">
+                            <option value="">字典类型</option>
+                            <option value="SYS">框架字典</option>
+                            <option value="DC">系统字典</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline">
+                        <button id="dictBtnSearch" class="layui-btn icon-btn"><i class="layui-icon">&#xe615;</i>搜索</button>
+                        <button id="dictBtnAdd" class="layui-btn icon-btn"><i class="layui-icon">&#xe654;</i>添加</button>
+                    </div>
+                </div>
+            </div>
+            <table class="layui-table" id="dictTable" lay-filter="dictTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="dictTableBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="dictForm">
+    <form lay-filter="dictForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label">键值</label>
+            <div class="layui-input-block">
+                <input name="value" placeholder="请输入键值" type="text" class="layui-input"
+                       maxlength="20" lay-verify="required" required/>
+                       <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">标签</label>
+            <div class="layui-input-block">
+                <input name="label" placeholder="请输入标签" type="text" class="layui-input"
+                       maxlength="20" lay-verify="required" required/>
+                       <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">类型</label>
+            <div class="layui-input-block">
+                <input name="type" placeholder="请输入类型" type="text" class="layui-input"
+                       maxlength="20" lay-verify="required" required/>
+                       <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">描述</label>
+            <div class="layui-input-block">
+                <input name="description" placeholder="请输入描述" type="text" class="layui-input"
+                       maxlength="20" lay-verify="required" required/>
+                       <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">排序</label>
+            <div class="layui-input-block">
+                <input name="sort" placeholder="请输入排序号" type="number" class="layui-input"
+                       max="100" lay-verify="required" required/>
+                       <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">字典类型</label>
+            <div class="layui-input-block">
+                <select name="sys" lay-verify="required">
+                    <option value="">字典类型</option>
+                    <option value="SYS">框架字典</option>
+                    <option value="DC">系统字典</option>
+                </select>
+                <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea name="remarks" placeholder="请输入备注" class="layui-textarea" maxlength="200"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+            <button class="layui-btn" lay-filter="dictFormSubmit" lay-submit>保存</button>
+        </div>
+    </form>
+</script>
+
+<!-- js部分 -->
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'admin', 'config', 'tableX'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var admin = layui.admin;
+        var config = layui.config;
+        var tableX = layui.tableX;
+
+        //渲染表格
+        table.render({
+            elem: '#dictTable',
+            url: config.base_server + 'dict',
+            where: {
+                access_token: config.getToken()
+            },
+            page: true,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers',title: '序号',width:80},
+                {field: 'value', title: '键值',sort:'true'},
+                {field: 'label', title: '标签',sort:'true'},
+                {field: 'type', title: '类型',sort:'true'},
+                // {field: 'sys', title: '字典类型'},
+                {
+                    templet: function (d) {
+                        return d.sys=='SYS'?'框架字典':'系统字典';
+                    }, title: '字典类型',sort:'true'
+                },
+                {field: 'description', title: '描述',sort:'true'},
+                {field: 'sort', title: '排序',sort:'true'},
+                {align: 'center', toolbar: '#dictTableBar', title: '操作', minWidth: 200}
+            ]]
+        });
+
+        // 添加按钮点击事件
+        $('#dictBtnAdd').click(function () {
+            showEditModel();
+        });
+
+        // 搜索按钮点击事件
+        $('#dictBtnSearch').click(function () {
+            //类型
+            var type = $('#type').val();
+            //描述
+            var description = $('#description').val();
+            var sys=$('#sys').val();
+            table.reload('dictTable', {where: {type :type, description :description,sys:sys}});
+        });
+
+        // 工具条点击事件
+        table.on('tool(dictTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') { //修改
+                showEditModel(data);
+            } else if (obj.event === 'del') { // 删除
+                doDelete(obj);
+            }
+        });
+
+        // 删除
+        function doDelete(obj) {
+            layer.confirm('确定要删除吗？', {
+                offset: '65px',
+                skin: 'layui-layer-admin'
+            }, function (i) {
+                layer.close(i);
+                layer.load(2);
+                admin.req('dict/' + obj.data.id, {}, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code == 200) {
+                        layer.msg(res.msg, {icon: 1});
+                        obj.del();
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'DELETE');
+            });
+        }
+
+        // 显示编辑弹窗
+        function showEditModel(data) {
+            admin.open({
+                type: 1,
+                area: '360px',
+                offset: '65px',
+                title: data ? '修改字典' : '添加字典',
+                content: $('#dictForm').html(),
+                success: function () {
+                    form.val('dictForm', data);
+                    // 表单提交事件
+                    form.on('submit(dictFormSubmit)', function (d) {
+                        layer.load(2);
+                        admin.req('dict', d.field, function (res) {
+                            layer.closeAll('loading');
+                            if (res.code == 200) {
+                                layer.msg(res.msg, {icon: 1});
+                                table.reload('dictTable');
+                                layer.closeAll('page');
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, data ? 'PUT' : 'POST');
+                        return false;
+                    });
+                }
+            });
+        }
+    });
+</script>

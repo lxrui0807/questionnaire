@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.modules.dao.PaperLogicalMapper">
+
+    <select id="findMaxSortByPaperId" resultType="Integer">
+      SELECT max(sort) FROM bd_paper_logical where paper_id=#{paperId}
+    </select>
+
+    <select id="getLastBysort" resultType="PaperLogical">
+      SELECT * FROM bd_paper_logical where paper_id=#{paperId} and skip='否' order by sort desc LIMIT 1
+    </select>
+    <!--查找非选项跳转且跳转问题为A，sort升序排列的上一个问题的Id——B-->
+    <select id="getQuestionIdBysort" resultType="String">
+    SELECT question_id FROM bd_paper_logical where skip_question_id=#{skipQuestionId} and paper_id=#{paperId}  and skip='否' order by sort asc LIMIT 1
+    </select>
+
+    <select id="geIdListByQueId" resultType="String">
+        SELECT id FROM bd_paper_logical where question_id=#{questionId} and paper_id=#{paperId}  and skip='否'
+    </select>
+    <select id="geIdListBySkipQueId"  resultType="String">
+        SELECT id FROM bd_paper_logical where skip_question_id=#{skipQuestionId} and paper_id=#{paperId}  and skip='否'
+    </select>
+    <!--  问题的顺序-->
+    <select id="getSortByQueId" resultType="Integer">
+        SELECT sort FROM bd_paper_logical where question_id=#{questionId} and paper_id=#{paperId}  and skip='否'
+    </select>
+    <!--  获取两个顺序之间的问题id-->
+    <select id="getQueIdsByTwoSort" resultType="String">
+        SELECT question_id FROM bd_paper_logical where sort &gt; #{smallSort} and sort &lt; #{largeSort} and paper_id=#{paperId}   and skip='否'
+    </select>
+
+    <!--  获取问题id的选项逻辑跳转的选项-->
+    <select id="getSkipOps" resultType="String">
+        SELECT skip_value FROM bd_paper_logical where question_id=#{questionId} and paper_id=#{paperId} and skip='是'
+        <if test="isManySkip!=null and isManySkip!='' ">
+            and is_many_skip=#{isManySkip}
+        </if>
+    </select>
+    <!--  问题为A 且 非选项跳转的列表 问题为A 的改为B-->
+    <update id="updateLastSkipByQue">
+        UPDATE bd_paper_logical
+        SET question_id=#{skipQuestionId}
+        WHERE id in (select a.id   from (
+        SELECT id FROM bd_paper_logical where question_id=#{questionId} and paper_id=#{paperId}  and skip='否' order by sort asc
+        ) as a)
+    </update>
+
+    <update id="updateLastSkip">
+        UPDATE bd_paper_logical
+        SET question_id=#{skipQuestionId}
+        WHERE id in (
+        <foreach collection="ids" separator="," item="id">
+            #{id}
+        </foreach>
+        )
+    </update>
+    <update id="updateSkipQues">
+        UPDATE bd_paper_logical
+        SET skip_question_id=#{questionId}
+         WHERE id in (
+        <foreach collection="ids" separator="," item="id">
+            #{id}
+        </foreach>
+         )
+    </update>
+</mapper>

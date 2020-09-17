@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.modules.dao.PaperAnswersMapper">
+    <!--根据问卷的ID，查询该问卷所有的问题-->
+    <select id="findAnswerById" resultType="QuestionInfo">
+        SELECT
+        q.id,
+        q.title,
+        q.type,
+        q.optiones,
+        q.create_time,
+        q.subtitle,
+        q.create_by,
+        q.update_time,
+        q.update_by,
+        q.star_type,
+        q.cascade_title,
+        q.cascade_text,
+        d.question_answer as remarks
+        FROM  bd_question_info q
+        INNER JOIN   bd_answer_detail d  on  q.id=d.question_id
+        LEFT JOIN bd_paper_logical pl on  pl.question_id=d.question_id and pl.skip='否'
+        WHERE d.paper_answer_id=#{id} and q.del_flag='0'
+        order by  pl.sort asc
+     </select>
+    <!--查询常用设备统计图表-->
+    <select id="findEquipmentChartData" resultType="PaperAnswers">
+        SELECT
+        equipment as name,
+        count(equipment) as value
+        FROM
+            bd_paper_answer
+        WHERE
+            paper_id = #{paperId} AND is_invalid='0'
+        group by equipment
+</select>
+    <!--查询操作系统统计图表-->
+    <select id="findSystemChartData" resultType="PaperAnswers">
+        SELECT
+            operating_system as name,
+            count( operating_system ) as value
+        FROM
+            bd_paper_answer
+        WHERE
+            paper_id = #{paperId} AND is_invalid='0'
+        GROUP BY
+            operating_system
+</select>
+    <!--查询来源统计图表数据-->
+    <select id="findSourceChartData" resultType="PaperAnswers">
+        SELECT
+        source as name,
+        count(source) as value
+        FROM
+            bd_paper_answer
+        WHERE
+            paper_id = #{paperId} AND is_invalid='0'
+        group by source
+    </select>
+    <!--回收数据统计界面查询语句-->
+    <select id="findRecycleTongJiData" resultType="PaperAnswers">
+      SELECT
+        pa.id,
+        pa.paper_id,
+        pa.start_time,
+        pa.end_time,
+        pa.equipment,
+        pa.operating_system,
+        pa.source,
+        pa.ip_url,
+        pa.area_id,
+        pa.update_by,
+        pa.update_time,
+        pa.is_invalid,
+        area.remarks as remarks
+    FROM
+        bd_paper_answer pa
+        left join sys_area area on pa.area_id = area.id
+    WHERE
+        paper_id = #{paperAnswers.paperId}
+        <if test="paperAnswers.isInvalid!=null and paperAnswers.isInvalid!='' ">
+            AND pa.is_invalid =#{paperAnswers.isInvalid}
+        </if>
+        <if test="paperAnswers.source!=null and paperAnswers.source!='' ">
+            AND pa.source LIKE CONCAT('%',#{paperAnswers.source},'%')
+        </if>
+        <if test="paperAnswers.ipUrl!=null and paperAnswers.ipUrl!='' ">
+            AND pa.ip_url LIKE CONCAT('%',#{paperAnswers.ipUrl},'%')
+        </if>
+        <if test="paperAnswers.startTime!=null  and paperAnswers.endTime!=null  ">
+            AND date_format( pa.end_time, '%Y-%m-%d' ) BETWEEN #{paperAnswers.startTime}
+            AND  #{paperAnswers.endTime}
+        </if>
+        <if test="paperAnswers.areaId!=null and paperAnswers.areaId!='' ">
+            AND pa.area_id = #{paperAnswers.areaId}
+        </if>
+        <if test="paperAnswers.value!=null and paperAnswers.value!='' ">
+            <choose>
+                <when test="paperAnswers.remarks=='小于' ">
+                    AND TIMESTAMPDIFF( MINUTE, start_time, end_time ) &lt; #{paperAnswers.value}
+                </when>
+                <otherwise>
+                    AND TIMESTAMPDIFF( MINUTE, start_time, end_time ) &gt; #{paperAnswers.value}
+                </otherwise>
+            </choose>
+        </if>
+    </select>
+    <select id="getDistinctUncovertedIps" resultType="string">
+        SELECT DISTINCT
+            ip_url
+        FROM
+            bd_paper_answer
+        WHERE
+            area_id IS NULL
+    </select>
+    <update id="updateByIp">
+        update bd_paper_answer
+        set area_id=#{areaId}
+        where ip_url=#{ipUrl}
+    </update>
+    <!--回收概况页面回答的地域数量接口-->
+    <select id="findAnswersByAreaCount" resultType="PaperAnswers">
+        SELECT
+            area.`NAME` as areaId,
+            count( 1 ) as answerCount
+        FROM
+            bd_paper_answer pa,
+            sys_area area
+        WHERE
+            pa.area_id = area.ID
+            AND pa.paper_id = #{paperId} AND pa.is_invalid='0'
+        GROUP BY
+            area.`NAME`
+    </select>
+    <!--问卷答案设置为无效-->
+    <update id="updateInvalidStatus">
+        UPDATE bd_paper_answer
+        SET is_invalid = '1',
+        invalid_cause = #{invalidCause}
+        WHERE
+	    id =#{id}
+    </update>
+    <!--查询答题时间超过1小时（60分钟）的答案-->
+    <select id="findOverTimeOfAnswer" resultType="string">
+        SELECT id FROM bd_paper_answer WHERE is_invalid = '0' AND TIMESTAMPDIFF( MINUTE, start_time, end_time ) > 60
+    </select>
+    <!--查询同一个ip地址，同一个问卷在一小时内的答案超过100份的答案-->
+    <select id="findSameIpOverCount" resultType="string">
+        SELECT
+        pa.id
+        FROM
+        bd_paper_answer pa,
+        (
+        SELECT
+        count( 1 ) AS count,
+        ip_url,
+        paper_id
+        FROM
+        bd_paper_answer
+        WHERE
+		is_invalid='0'
+		and TIMESTAMPDIFF( MINUTE, create_time, SYSDATE( ) ) &lt; 60
+        GROUP BY
+        ip_url,
+        paper_id
+        ) a
+        WHERE
+        a.paper_id = pa.paper_id
+        AND a.ip_url = pa.ip_url
+        AND a.count > 100
+
+    </select>
+
+</mapper>

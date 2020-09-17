@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.system.dao.OfficeMapper">
+    <select id="findByParentId" resultType="com.wf.ew.system.model.Office">
+		select
+			A.id,
+			A.parent_id AS "parent.id",
+			A.name,
+			A.type,
+			A.remarks,
+			A.PARENT_IDS,
+			A.code,
+			A.grade,
+			A.AREA_ID,
+			A.sort,
+			0 as state,
+			(select count(1)>0 from SYS_OFFICE where parent_ID=A.id and DEL_FLAG='0') as haveChild
+		from SYS_OFFICE A
+	 	where  A.DEL_FLAG='0'
+	 	<choose>
+			<when test="pid!=null and pid!='' ">
+				and A.PARENT_ID=#{pid}
+			</when>
+			<otherwise>
+				and (isnull(A.PARENT_ID) or trim(A.PARENT_ID)='')
+			</otherwise>
+		</choose>
+	    order by A.sort,A.id
+	</select>
+
+	<!--顶级部门名称不允许重复-->
+	<select id="checkTopOffice" resultType="Integer">
+		SELECT count(ID) FROM sys_office
+		WHERE DEL_FLAG='0'
+		AND PARENT_ID IS NULL
+		AND NAME=#{name}
+	</select>
+
+	<!--顶级部门下，部门名称不允许重复-->
+	<select id="checkSubOffice" resultType="Integer">
+		SELECT count(ID) FROM sys_office
+		WHERE DEL_FLAG='0'
+		AND PARENT_ID is not NULL
+		AND PARENT_ID=#{parentId}
+		AND NAME=#{name}
+	</select>
+
+	<!--根据父级编号获取上级部门名称-->
+	<select id="getFatherNameByParentId" resultType="String">
+		SELECT NAME FROM sys_office
+		where  DEL_FLAG='0'
+		AND ID=#{parentId}
+	</select>
+
+	<!--根据公司名获取公司id-->
+	<select id="getCompanyIdByCompanyName" resultType="String">
+		SELECT ID FROM sys_office
+		WHERE DEL_FLAG='0'
+		AND NAME=#{companyName}
+	</select>
+
+	<!--定位(开发一部)-->
+	<select id="getLocation" resultType="Office">
+		select ID,PARENT_IDS from sys_office
+		where DEL_FLAG='0'
+		AND PARENT_IDS like CONCAT(#{companyId},'%')
+		AND NAME=#{fatherName}
+	</select>
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wf.ew.modules.dao.QuestionInfoMapper">
+    <!--根据问卷的ID，查询该问卷所有的问题-->
+    <select id="findListByPaperId" resultType="QuestionInfo">
+       SELECT
+        q.id,
+        q.title,
+        q.type,
+        q.optiones,
+        q.create_time,
+        q.subtitle,
+        q.create_by,
+        q.update_time,
+        q.update_by,
+        q.star_type,
+        pl.sort AS "delFlag",
+        pq.required AS "remarks",
+        q.cascade_title,
+        q.cascade_text
+      FROM bd_paper_question pq
+      INNER JOIN   bd_question_info q  on  q.id=pq.question_id
+      LEFT JOIN bd_paper_logical pl on  pl.question_id=pq.question_id and pl.skip='否'
+      WHERE q.del_flag='0' and pq.paper_id=#{paperId}
+      <if test="sort!=null and sort!='' ">
+          <choose>
+              <when test="relation!=null and relation=='small' ">
+                  and pl.sort &lt; #{sort} and q.type in ('radio','select')
+              </when>
+              <otherwise>
+                  and pl.sort &gt;  #{sort}
+              </otherwise>
+          </choose>
+      </if>
+      order by  pl.sort asc
+
+    </select>
+
+    <!--删除-->
+    <update id="move">
+        UPDATE bd_question_info
+        SET del_flag='1'
+        WHERE id=#{id}
+    </update>
+
+    <!--撤销-->
+    <update id="recovery">
+        UPDATE bd_question_info
+        SET del_flag='0'
+        WHERE id=#{id}
+    </update>
+    <select id="findQuestionBanks" resultType="String">
+        SELECT question_bank_type FROM bd_question_info where question_bank='是' and del_flag='0'
+        group by question_bank_type
+    </select>
+    <select id="findQuestionBankList" resultType="QuestionInfo">
+      SELECT * FROM bd_question_info where question_bank='是' and del_flag='0'
+      and question_bank_type=#{questionBankType}
+      order by create_time desc
+    </select>
+    <select id="findQuestionCollect" resultType="QuestionInfo">
+        SELECT
+        q.id,
+        q.title,
+        q.type,
+        q.optiones,
+        q.create_time,
+        q.subtitle,
+        q.create_by,
+        q.update_time,
+        q.update_by,
+        q.star_type,
+        co.id as remarks,
+        q.cascade_title,
+        q.cascade_text
+        FROM `bd_question_collect` co,bd_question_info q
+        where q.id=co.question_id
+        and co.user_id=#{userId}
+    </select>
+    <select id="findDelQuestionIds" resultType="String">
+        SELECT q.id FROM bd_question_info q,bd_paper_question pq WHERE  q.id=pq.question_id and q.question_bank='否' and  pq.paper_id = #{paperId}
+    </select>
+</mapper>

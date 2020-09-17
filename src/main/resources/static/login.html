@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>用户登录</title>
+    <link rel="stylesheet" href="assets/libs/layui/css/layui.css"/>
+    <link rel="stylesheet" href="assets/css/login.css">
+    <style>
+        #send{
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="login-body">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="layui-icon layui-icon-engine"></i>&nbsp;&nbsp;用户登录
+            </div>
+            <form class="layui-card-body layui-form layui-form-pane">
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-username"></i></label>
+                    <div class="layui-input-block">
+                        <input name="username" type="text" placeholder="账号" class="layui-input"
+                               lay-verify="required" required/>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-password"></i></label>
+                    <div class="layui-input-block">
+                        <input name="password" type="password" placeholder="密码" class="layui-input"
+                               lay-verify="required" required/>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <!-- <a href="javascript:;" class="layui-link">帐号注册</a>-->
+                    <a href="register.html" class="layui-link">帐号注册</a>
+                    <a href="javascript:;" class="layui-link pull-right forgot">忘记密码？</a>
+                </div>
+                <div class="layui-form-item">
+                    <button lay-filter="login-submit" class="layui-btn layui-btn-fluid" lay-submit>登 录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="login-footer">
+        <p>
+            <span><a href="http://www.gguow.com/" target="_blank">神州远景(西安)科技发展有限公司</a></span>
+        </p>
+        <p>© 2012-2019 国家级苹果产业大数据平台</p>
+    </div>
+</div>
+<!-- 手机号验证码表单弹窗 -->
+<script type="text/html" id="forgotPasswordForm">
+    <form class="layui-form model-form" id="phoneCode">
+        <div class="layui-form-item">
+            <label class="layui-form-label">手机号:</label>
+            <div class="layui-input-block">
+                <div class="layui-col-xs7">
+                    <input type="text" name="phone" id="phone" placeholder="请输入手机号" class="layui-input"
+                           lay-verType="tips" lay-verify="required|phone" required/>
+                    <i class="encryption">*</i>
+                </div>
+                <div class="layui-col-xs3">
+                    <input class="layui-btn icon-btn" type="button" id="send" value="发送验证码"></input>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">验证码：</label>
+            <div class="layui-input-block">
+                <input name="code" type="text" id="phoneCodeNum" placeholder="请输入短信验证码" class="layui-input"
+                       autocomplete="off" lay-verType="tips" lay-verify="required|code" required/>
+                <i class="encryption codeI">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">新密码:</label>
+            <div class="layui-input-block">
+                <input type="password" name="newPsw" placeholder="请输入新密码" class="layui-input"
+                       lay-verType="tips" lay-verify="required|psw" required/>
+                <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">确认密码:</label>
+            <div class="layui-input-block">
+                <input type="password" name="rePsw" placeholder="请再次输入新密码" class="layui-input"
+                       lay-verType="tips" lay-verify="required|repsw" required/>
+                <i class="encryption">*</i>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block text-right">
+                <button class="layui-btn" type="button" ew-event="closeDialog">取消</button>
+                <button class="layui-btn" lay-filter="submitCode" lay-submit>提交</button>
+
+            </div>
+        </div>
+    </form>
+</script>
+<script type="text/javascript" src="assets/libs/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: 'assets/module/'
+    }).use(['layer', 'form', 'config', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var config = layui.config;
+        var admin = layui.admin;
+
+        if (config.getToken()) {
+            goIndex();
+        }
+
+        // 表单提交
+        form.on('submit(login-submit)', function (obj) {
+            layer.load(2);
+            $.post(config.base_server + 'user/login', obj.field, function (res) {
+                layer.closeAll('loading');
+                if (200 == res.code) {
+                    config.putToken(res.token.accessToken);
+                    layer.msg(res.msg, {icon: 1, time: 1500}, function () {
+                        goIndex();
+                    });
+                } else {
+                    layer.msg(res.msg, {icon: 5});
+                }
+            }, 'json');
+            return false;
+        });
+
+        function goIndex() {
+            location.replace('/');
+        }
+
+        // 添加按钮点击事件,点击忘记密码
+        $('.forgot').click(function () {
+            showEditModel();
+        });
+
+        function sendMessage() {
+            $('input[name="phone"]').siblings('.error').remove();
+            var mobileReg = /(^0[1-9]{1}\d{9,10}$)|(^((13\d)|(14\d)|(15\d)|(17\d)|(18\d)||(19\d))\d{8}$)/g;//手机号和固话的验证
+            var phone = $("#phone").val();
+            if (phone.length <= 0) {
+            	layer.msg('手机号不能为空！', {icon: 2});
+                return false;
+            }else if(phone != ''&&!mobileReg.test(phone)){
+            	layer.msg('请输入正确的手机号！', {icon: 2});
+                return false;
+            }
+            //发送短信
+            $.post(apiUrl+'/phone/sendMsg', {'phone': phone}, function (data) {
+                $('.codeI').after('<label class="error">' + data.msg + '<label>');
+            });
+
+            curCount = count;
+            $("#send").attr("disabled", "true");
+            $("#send").val(curCount + "秒后可重新发送");
+            window.InterValObj = setInterval(SetRemainTime, 1000); //启动计时器，1秒执行一次请求后台发送验证码
+            return false;
+        }
+
+        //timer处理函数
+        function SetRemainTime() {
+            if (curCount == 0) {
+                window.clearInterval(InterValObj);//停止计时器
+                $("#send").removeAttr("disabled");//启用按钮
+                $("#send").val("重新发送验证码");
+            } else {
+                curCount--;
+                $("#send").val(curCount + "秒后可重新发送");
+            }
+        }
+
+        // 添加表单验证方法
+        form.verify({
+            psw: [/^[\S]{5,12}$/, '密码必须5到12位，且不能出现空格'],
+            repsw: function (t) {
+                if (t !== $('#phoneCode input[name=newPsw]').val()) {
+                    return '两次密码输入不一致';
+                }
+            }
+        });
+        var count = 120; //间隔函数，1秒执行
+
+        // 显示表单弹窗
+        function showEditModel() {
+            if(window.InterValObj!=null){
+                clearInterval(InterValObj);//停止计时器
+            }
+            var phoneEdit = admin.open({
+                type: 1,
+                area: '450px',
+                offset: '65px',
+                title: '找回密码',
+                content: $('#forgotPasswordForm').html(),
+            });
+            // 监听修改密码表单提交
+            form.on('submit(submitCode)', function (d) {
+                $.ajax({
+                    url: apiUrl+'/common/updatePsw',
+                    data: d.field,
+                    "async": true,
+                    "crossDomain": true,
+                    type: 'POST',
+                    "method": "PUT",
+                    success: function (res) {
+                        layer.close(phoneEdit);
+                        if (res.code == 200) {
+                            layer.msg(res.msg, {icon: 1});
+                            // return false;
+                        } else {
+                            layer.msg(res.msg, {icon: 2});
+                            // return false;
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(JSON.stringify(xhr))
+                    }
+                });
+                return false;
+            });
+            // 添加按钮点击事件,点击发送验证码
+            $('#send').on('click', function () {
+                sendMessage();
+            });
+        }
+
+    });
+
+</script>
+</body>
+</html>
